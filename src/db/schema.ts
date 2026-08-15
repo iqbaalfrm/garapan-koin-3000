@@ -13,3 +13,17 @@ export const entries = pgTable('entries', {
 
 export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;
+
+export const vaTumbal = pgTable('va_tumbal', {
+  id: serial('id').primaryKey(),
+  nomor_va: text('nomor_va').notNull(),
+  bank: text('bank').notNull().default('SeaBank'),
+  label: text('label'),
+  catatan: text('catatan'),
+  status: text('status').$type<'aktif' | 'penuh' | 'nonaktif'>().notNull().default('aktif'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type VATumbal = typeof vaTumbal.$inferSelect;
+export type NewVATumbal = typeof vaTumbal.$inferInsert;
+

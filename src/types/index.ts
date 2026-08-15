@@ -44,3 +44,16 @@ export interface FilterParams {
   sesi?: string;
   search?: string;
 }
+
+export type VATumbalStatus = 'aktif' | 'penuh' | 'nonaktif';
+
+export interface VATumbalItem {
+  id: number;
+  nomor_va: string;
+  bank: string;
+  label?: string | null;
+  catatan?: string | null;
+  status: VATumbalStatus;
+  createdAt?: string;
+}
+

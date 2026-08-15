@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Coins, LayoutDashboard, PlusCircle, History, X, Sparkles } from 'lucide-react';
+import { Coins, LayoutDashboard, PlusCircle, History, X, Sparkles, Wallet } from 'lucide-react';
+
+export type TabType = 'dashboard' | 'input' | 'riwayat' | 'va-tumbal';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'input' | 'riwayat';
-  setActiveTab: (tab: 'dashboard' | 'input' | 'riwayat') => void;
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -32,7 +34,13 @@ export default function Sidebar({
       label: 'Riwayat Transaksi',
       icon: History,
     },
+    {
+      id: 'va-tumbal',
+      label: 'VA Tumbal',
+      icon: Wallet,
+    },
   ] as const;
+
 
   return (
     <>
