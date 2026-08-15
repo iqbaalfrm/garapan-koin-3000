@@ -47,7 +47,8 @@ export default function QrisTumbalView() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState<number>(10);
+
 
   const providerPresets = ['ShopeePay', 'DANA', 'GoPay', 'OVO', 'BCA', 'Nobu Bank'];
 
@@ -495,33 +496,58 @@ export default function QrisTumbalView() {
 
 
         {/* Pagination Footer */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
-            <p className="text-slate-500">
-              Menampilkan {Math.min((currentPage - 1) * pageSize + 1, items.length)} -{' '}
-              {Math.min(currentPage * pageSize, items.length)} dari {items.length} QRIS
-            </p>
-            <div className="flex items-center space-x-1">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold disabled:opacity-40 hover:bg-slate-200 transition"
-              >
-                Sebelumnya
-              </button>
-              <span className="px-3 py-1 text-slate-600 font-bold">
-                {currentPage} / {totalPages}
-              </span>
-              <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                className="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold disabled:opacity-40 hover:bg-slate-200 transition"
-              >
-                Selanjutnya
-              </button>
-            </div>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+          <div className="flex items-center space-x-2 text-slate-500">
+            <span>Tampilkan</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-shopee-500"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span>dari {items.length} Raw QRIS</span>
           </div>
-        )}
+
+          <div className="flex items-center space-x-1.5">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold disabled:opacity-40 hover:bg-slate-200 transition"
+            >
+              Sebelumnya
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`w-8 h-8 rounded-xl text-xs font-bold transition ${
+                  currentPage === pageNum
+                    ? 'bg-shopee-500 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-semibold disabled:opacity-40 hover:bg-slate-200 transition"
+            >
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+
       </div>
 
       {/* Edit Modal */}
