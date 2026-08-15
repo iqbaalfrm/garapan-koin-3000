@@ -193,10 +193,10 @@ export default function QrisTumbalView() {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const [isDragging, setIsDragging] = useState<boolean>(false);
 
+  const processFile = (file?: File) => {
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target?.result as string;
@@ -206,6 +206,33 @@ export default function QrisTumbalView() {
     };
     reader.readAsText(file);
   };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  };
+
 
 
   // Handle Copy to Clipboard
@@ -479,15 +506,32 @@ export default function QrisTumbalView() {
           /* Bulk / Massal Mode Form */
           <form onSubmit={handleBulkSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* File Upload Zone */}
-              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center bg-slate-50/50 hover:bg-slate-50 transition flex flex-col items-center justify-center space-y-2">
-                <div className="p-3 bg-shopee-50 text-shopee-600 rounded-full">
+              {/* File Upload Zone with Drag & Drop */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-2xl p-5 text-center transition flex flex-col items-center justify-center space-y-2 cursor-pointer ${
+                  isDragging
+                    ? 'border-shopee-500 bg-shopee-50/80 ring-4 ring-shopee-500/10 scale-[1.01]'
+                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100 hover:border-shopee-400'
+                }`}
+              >
+                <div
+                  className={`p-3 rounded-full transition ${
+                    isDragging
+                      ? 'bg-shopee-500 text-white animate-bounce'
+                      : 'bg-shopee-50 text-shopee-600'
+                  }`}
+                >
                   <FileUp className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">Upload File .TXT / log</p>
+                  <p className="text-xs font-bold text-slate-800">
+                    {isDragging ? 'Lepaskan File .TXT di Sini' : 'Drag & Drop / Upload File .TXT'}
+                  </p>
                   <p className="text-[10px] text-slate-500 mt-0.5">
-                    Pilih file teks berisi daftar QRIS (Item 1, RAW Data = ...)
+                    Tarik & lepas file .txt ke area ini atau klik tombol di bawah
                   </p>
                 </div>
                 <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl shadow-xs inline-flex items-center gap-1.5 transition">
@@ -500,6 +544,7 @@ export default function QrisTumbalView() {
                   />
                 </label>
               </div>
+
 
               {/* Status Detection Box */}
               <div className="bg-slate-900 text-white rounded-2xl p-5 flex flex-col justify-between space-y-3">
