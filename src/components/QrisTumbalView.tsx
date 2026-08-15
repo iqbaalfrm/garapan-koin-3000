@@ -30,32 +30,36 @@ function parseBulkQrisText(text: string): string[] {
   if (!text || !text.trim()) return [];
 
   const results: string[] = [];
+  const lines = text.split(/\r?\n/);
 
-  // 1. Ekstrak dari RAW Data = 000201... atau Data = 000201...
-  const matches1 = Array.from(
-    text.matchAll(/(?:RAW Data|Data)\s*=\s*(000201[A-Za-z0-9\.\_\-\+\=]+)/gi)
-  );
-  for (const match of matches1) {
-    if (match[1] && match[1].trim().length >= 30) {
-      results.push(match[1].trim());
-    }
-  }
-
-  // 2. Jika tidak ada format RAW Data=..., cari string QRIS yang diawali 000201
-  if (results.length === 0) {
-    const matches2 = Array.from(
-      text.matchAll(/(000201[A-Za-z0-9\.\_\-\+\=]{25,})/gi)
-    );
-    for (const match of matches2) {
-      if (match[1] && match[1].trim().length >= 30) {
-        results.push(match[1].trim());
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    const idx = line.indexOf('000201');
+    if (idx !== -1) {
+      const qrisCandidate = line.substring(idx).trim();
+      if (qrisCandidate.length >= 30) {
+        results.push(qrisCandidate);
       }
     }
   }
 
-  // Deduplikasi string unik
+  // Fallback: Jika tidak dipisah per baris, cari via regex global 000201...
+  if (results.length === 0) {
+    const globalMatches = text.match(/000201[^\n\r]+/g);
+    if (globalMatches) {
+      for (const item of globalMatches) {
+        const cleaned = item.trim();
+        if (cleaned.length >= 30) {
+          results.push(cleaned);
+        }
+      }
+    }
+  }
+
+  // Deduplikasi string unik (menghilangkan duplikasi Data & RAW Data pada item yang sama)
   return Array.from(new Set(results));
 }
+
 
 export default function QrisTumbalView() {
   const [items, setItems] = useState<QrisTumbalItem[]>([]);
