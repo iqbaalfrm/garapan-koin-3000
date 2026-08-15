@@ -315,88 +315,6 @@ export default function QrisTumbalView() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Merchant / Provider */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Provider / Merchant
-              </label>
-              <select
-                value={provider}
-                onChange={(e) => setProvider(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
-              >
-                {providerPresets.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-                <option value="Lainnya">Lainnya</option>
-              </select>
-
-              {/* Quick Preset Buttons */}
-              <div className="flex flex-wrap gap-1 mt-2">
-                {providerPresets.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setProvider(p)}
-                    className={`px-2 py-0.5 text-[10px] font-semibold rounded-md transition ${
-                      provider === p
-                        ? 'bg-shopee-500 text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Nama Merchant / Label */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Nama QRIS / Label (Opsional)
-              </label>
-              <input
-                type="text"
-                value={namaQris}
-                onChange={(e) => setNamaQris(e.target.value)}
-                placeholder="Contoh: QRIS Koin Sesi Pagi #1"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
-              />
-            </div>
-
-            {/* Status QRIS */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Status
-              </label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as QrisTumbalStatus)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
-              >
-                <option value="aktif">🟢 Aktif (Siap Pakai)</option>
-                <option value="penuh">🟡 Penuh (Limit Reached)</option>
-                <option value="nonaktif">🔴 Nonaktif</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Catatan / Keterangan (Opsional)
-            </label>
-            <input
-              type="text"
-              value={catatan}
-              onChange={(e) => setCatatan(e.target.value)}
-              placeholder="Catatan tambahan untuk QRIS ini..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
-            />
-          </div>
-
           <div className="pt-2 flex justify-end">
             <button
               type="submit"
@@ -417,6 +335,7 @@ export default function QrisTumbalView() {
             </button>
           </div>
         </form>
+
       </div>
 
       {/* Tabel Daftar Raw QRIS Tumbal */}
