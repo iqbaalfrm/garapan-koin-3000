@@ -18,9 +18,44 @@ import {
   Eye,
   X,
   ExternalLink,
+  FileUp,
+  FileText,
+  Upload,
 } from 'lucide-react';
 import { QrisTumbalItem, QrisTumbalStatus } from '@/types';
 import QrisTumbalEditModal from './QrisTumbalEditModal';
+
+// Helper parser untuk mengekstrak string Raw QRIS dari isi file/teks massal
+function parseBulkQrisText(text: string): string[] {
+  if (!text || !text.trim()) return [];
+
+  const results: string[] = [];
+
+  // 1. Ekstrak dari RAW Data = 000201... atau Data = 000201...
+  const matches1 = Array.from(
+    text.matchAll(/(?:RAW Data|Data)\s*=\s*(000201[A-Za-z0-9\.\_\-\+\=]+)/gi)
+  );
+  for (const match of matches1) {
+    if (match[1] && match[1].trim().length >= 30) {
+      results.push(match[1].trim());
+    }
+  }
+
+  // 2. Jika tidak ada format RAW Data=..., cari string QRIS yang diawali 000201
+  if (results.length === 0) {
+    const matches2 = Array.from(
+      text.matchAll(/(000201[A-Za-z0-9\.\_\-\+\=]{25,})/gi)
+    );
+    for (const match of matches2) {
+      if (match[1] && match[1].trim().length >= 30) {
+        results.push(match[1].trim());
+      }
+    }
+  }
+
+  // Deduplikasi string unik
+  return Array.from(new Set(results));
+}
 
 export default function QrisTumbalView() {
   const [items, setItems] = useState<QrisTumbalItem[]>([]);
@@ -28,14 +63,18 @@ export default function QrisTumbalView() {
   const [search, setSearch] = useState<string>('');
 
   // Form input state
+  const [inputMode, setInputMode] = useState<'single' | 'bulk'>('single');
   const [rawQris, setRawQris] = useState<string>('');
+  const [bulkText, setBulkText] = useState<string>('');
   const [namaQris, setNamaQris] = useState<string>('');
   const [provider, setProvider] = useState<string>('ShopeePay');
   const [catatan, setCatatan] = useState<string>('');
   const [status, setStatus] = useState<QrisTumbalStatus>('aktif');
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [bulkSubmitting, setBulkSubmitting] = useState<boolean>(false);
   const [formError, setFormError] = useState<string>('');
   const [formSuccess, setFormSuccess] = useState<string>('');
+
 
   // Editing & Preview QR State
   const [editingItem, setEditingItem] = useState<QrisTumbalItem | null>(null);
@@ -116,6 +155,58 @@ export default function QrisTumbalView() {
       setSubmitting(false);
     }
   };
+
+  // Handle Mass / Bulk Import
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const extractedCodes = parseBulkQrisText(bulkText);
+
+    if (extractedCodes.length === 0) {
+      setFormError('Tidak ada kode Raw QRIS valid yang terdeteksi dalam teks/file.');
+      return;
+    }
+
+    setBulkSubmitting(true);
+    setFormError('');
+    setFormSuccess('');
+
+    try {
+      const res = await fetch('/api/qris-tumbal/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: extractedCodes }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Gagal mengimport QRIS massal.');
+      }
+
+      setFormSuccess(`Berhasil mengimport ${data.count} Raw QRIS Tumbal secara massal!`);
+      setBulkText('');
+      fetchItems();
+    } catch (err: any) {
+      setFormError(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        setBulkText(content);
+      }
+    };
+    reader.readAsText(file);
+  };
+
 
   // Handle Copy to Clipboard
   // Handle Copy to Clipboard & Auto Mark as Terpakai
@@ -270,19 +361,51 @@ export default function QrisTumbalView() {
 
       {/* Form Input Raw QRIS */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-shopee-500 text-white rounded-xl shadow-md shadow-shopee-500/20">
               <Plus className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Tambah Raw QRIS Tumbal Baru</h2>
-              <p className="text-xs text-slate-500">Masukkan kode string Raw QRIS untuk memudahkan pemindahan saldo koin</p>
+              <h2 className="text-base font-bold text-slate-900">Tambah Raw QRIS Tumbal</h2>
+              <p className="text-xs text-slate-500">Pilih mode single atau upload massal dari file .txt</p>
             </div>
           </div>
-          <span className="text-[11px] font-semibold bg-shopee-50 text-shopee-600 px-3 py-1 rounded-full border border-shopee-200">
-            Form Raw QRIS
-          </span>
+
+          {/* Mode Selector Tabs */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+            <button
+              type="button"
+              onClick={() => {
+                setInputMode('single');
+                setFormError('');
+                setFormSuccess('');
+              }}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
+                inputMode === 'single'
+                  ? 'bg-white text-shopee-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Single Input
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setInputMode('bulk');
+                setFormError('');
+                setFormSuccess('');
+              }}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                inputMode === 'bulk'
+                  ? 'bg-white text-shopee-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <FileUp className="w-3.5 h-3.5" />
+              <span>Upload TXT / Massal</span>
+            </button>
+          </div>
         </div>
 
         {formError && (
@@ -299,57 +422,160 @@ export default function QrisTumbalView() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Kode Raw QRIS (Payload String) <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <textarea
-                rows={3}
-                value={rawQris}
-                onChange={(e) => setRawQris(e.target.value)}
-                placeholder="Paste kode Raw QRIS di sini... (Contoh: 00020101021126620016ID.CO.SHOPEE.WWW...)"
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono break-all focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
-                required
-              />
-              {rawQris.trim() && (
-                <button
-                  type="button"
-                  onClick={() => handleCopy(rawQris.trim(), -1)}
-                  className="absolute right-2 top-2 px-2.5 py-1 bg-shopee-50 text-shopee-600 hover:bg-shopee-100 rounded-lg text-xs font-bold flex items-center gap-1 transition"
-                  title="Tes Salin Kode"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Salin Kode</span>
-                </button>
-              )}
+        {/* Single Mode Form */}
+        {inputMode === 'single' ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Kode Raw QRIS (Payload String) <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  value={rawQris}
+                  onChange={(e) => setRawQris(e.target.value)}
+                  placeholder="Paste kode Raw QRIS di sini... (Contoh: 00020101021126620016ID.CO.SHOPEE.WWW...)"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono break-all focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
+                  required
+                />
+                {rawQris.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(rawQris.trim(), -1)}
+                    className="absolute right-2 top-2 px-2.5 py-1 bg-shopee-50 text-shopee-600 hover:bg-shopee-100 rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                    title="Tes Salin Kode"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Salin Kode</span>
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Panjang Karakter: <span className="font-bold text-slate-600">{rawQris.trim().length}</span>
+              </p>
             </div>
-            <p className="text-[10px] text-slate-400 mt-1">
-              Panjang Karakter: <span className="font-bold text-slate-600">{rawQris.trim().length}</span>
-            </p>
-          </div>
 
-          <div className="pt-2 flex justify-end">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-6 py-2.5 text-xs font-bold text-white bg-shopee-500 hover:bg-shopee-600 rounded-xl shadow-md shadow-shopee-500/20 flex items-center space-x-2 transition disabled:opacity-50"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Menyimpan...</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  <span>Simpan Raw QRIS Tumbal</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-6 py-2.5 text-xs font-bold text-white bg-shopee-500 hover:bg-shopee-600 rounded-xl shadow-md shadow-shopee-500/20 flex items-center space-x-2 transition disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Menyimpan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>Simpan Raw QRIS Tumbal</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          /* Bulk / Massal Mode Form */
+          <form onSubmit={handleBulkSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* File Upload Zone */}
+              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center bg-slate-50/50 hover:bg-slate-50 transition flex flex-col items-center justify-center space-y-2">
+                <div className="p-3 bg-shopee-50 text-shopee-600 rounded-full">
+                  <FileUp className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">Upload File .TXT / log</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Pilih file teks berisi daftar QRIS (Item 1, RAW Data = ...)
+                  </p>
+                </div>
+                <label className="cursor-pointer px-4 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl shadow-xs inline-flex items-center gap-1.5 transition">
+                  <span>Pilih File .TXT</span>
+                  <input
+                    type="file"
+                    accept=".txt,.log,.dat"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
+              {/* Status Detection Box */}
+              <div className="bg-slate-900 text-white rounded-2xl p-5 flex flex-col justify-between space-y-3">
+                <div>
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                      Hasil Deteksi QRIS
+                    </span>
+                    <span className="px-2.5 py-0.5 text-[10px] font-extrabold bg-shopee-500 text-white rounded-full">
+                      {parseBulkQrisText(bulkText).length} Terdeteksi
+                    </span>
+                  </div>
+                  {parseBulkQrisText(bulkText).length > 0 ? (
+                    <div className="mt-3 space-y-1.5 max-h-28 overflow-y-auto pr-1">
+                      {parseBulkQrisText(bulkText).map((code, idx) => (
+                        <div
+                          key={idx}
+                          className="text-[11px] font-mono text-emerald-400 bg-slate-800/80 px-2.5 py-1 rounded-lg truncate"
+                        >
+                          #{idx + 1}: {code.substring(0, 24)}...
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-4 italic">
+                      Upload file .txt atau tempel teks pada kolom di bawah ini.
+                    </p>
+                  )}
+                </div>
+
+                {parseBulkQrisText(bulkText).length > 0 && (
+                  <p className="text-[10px] text-emerald-400 font-medium">
+                    ✅ Siap di-import secara otomatis ke database.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Textarea Paste Bulk Content */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Atau Tempel Isi File / Teks Massal di Sini
+              </label>
+              <textarea
+                rows={5}
+                value={bulkText}
+                onChange={(e) => setBulkText(e.target.value)}
+                placeholder={`Paste isi file .txt di sini, contoh:\n\nItem 1:\nType = TEXT\nData = 000201010212...\nRAW Data = 000201010212...\n\nItem 2:\nType = TEXT\nData = 000201010212...`}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:ring-2 focus:ring-shopee-500 focus:bg-white transition"
+              />
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={bulkSubmitting || parseBulkQrisText(bulkText).length === 0}
+                className="px-6 py-2.5 text-xs font-bold text-white bg-shopee-500 hover:bg-shopee-600 rounded-xl shadow-md shadow-shopee-500/20 flex items-center space-x-2 transition disabled:opacity-50"
+              >
+                {bulkSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Mengimport...</span>
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="w-4 h-4" />
+                    <span>
+                      Import {parseBulkQrisText(bulkText).length} QRIS Massal
+                    </span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
 
       </div>
 
