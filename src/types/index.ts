@@ -57,7 +57,7 @@ export interface VATumbalItem {
   createdAt?: string;
 }
 
-export type QrisTumbalStatus = 'aktif' | 'penuh' | 'nonaktif';
+export type QrisTumbalStatus = 'aktif' | 'terpakai' | 'penuh' | 'nonaktif';
 
 export interface QrisTumbalItem {
   id: number;

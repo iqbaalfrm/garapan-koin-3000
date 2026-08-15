@@ -22,31 +22,33 @@ export async function PUT(
     const body = await request.json();
     const { raw_qris, nama_qris, provider, catatan, status } = body;
 
-    if (!raw_qris || String(raw_qris).trim() === '') {
-      return NextResponse.json(
-        { success: false, error: 'Kode Raw QRIS wajib diisi.' },
-        { status: 400 }
-      );
-    }
-
-    const updated = await db
-      .update(qrisTumbal)
-      .set({
-        raw_qris: String(raw_qris).trim(),
-        nama_qris: nama_qris ? String(nama_qris).trim() : null,
-        provider: provider ? String(provider).trim() : 'ShopeePay',
-        catatan: catatan ? String(catatan).trim() : null,
-        status: status && ['aktif', 'penuh', 'nonaktif'].includes(status) ? status : 'aktif',
-      })
-      .where(eq(qrisTumbal.id, id))
-      .returning();
-
-    if (updated.length === 0) {
+    const existing = await db.select().from(qrisTumbal).where(eq(qrisTumbal.id, id));
+    if (existing.length === 0) {
       return NextResponse.json(
         { success: false, error: 'Data QRIS tidak ditemukan.' },
         { status: 404 }
       );
     }
+
+    const currentData = existing[0];
+    const newRawQris = raw_qris !== undefined && String(raw_qris).trim() !== '' ? String(raw_qris).trim() : currentData.raw_qris;
+    const newStatus = status && ['aktif', 'terpakai', 'penuh', 'nonaktif'].includes(status) ? status : currentData.status;
+    const newNamaQris = nama_qris !== undefined ? (nama_qris ? String(nama_qris).trim() : null) : currentData.nama_qris;
+    const newProvider = provider !== undefined ? (provider ? String(provider).trim() : 'ShopeePay') : currentData.provider;
+    const newCatatan = catatan !== undefined ? (catatan ? String(catatan).trim() : null) : currentData.catatan;
+
+    const updated = await db
+      .update(qrisTumbal)
+      .set({
+        raw_qris: newRawQris,
+        nama_qris: newNamaQris,
+        provider: newProvider,
+        catatan: newCatatan,
+        status: newStatus,
+      })
+      .where(eq(qrisTumbal.id, id))
+      .returning();
+
 
     return NextResponse.json({
       success: true,

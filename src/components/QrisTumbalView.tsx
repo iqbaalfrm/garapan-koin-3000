@@ -117,10 +117,31 @@ export default function QrisTumbalView() {
   };
 
   // Handle Copy to Clipboard
-  const handleCopy = (qrisCode: string, id: number) => {
+  // Handle Copy to Clipboard & Auto Mark as Terpakai
+  const handleCopy = async (qrisCode: string, id: number) => {
     navigator.clipboard.writeText(qrisCode);
     setCopiedId(id);
-    setCopiedToast(`Raw QRIS ( ${qrisCode.substring(0, 18)}... ) tersalin!`);
+
+    if (id !== -1) {
+      // Ubah status lokal secara langsung
+      setItems((prevItems) =>
+        prevItems.map((item) => (item.id === id ? { ...item, status: 'terpakai' } : item))
+      );
+
+      setCopiedToast(`Raw QRIS tersalin & otomatis diubah menjadi Terpakai!`);
+
+      try {
+        await fetch(`/api/qris-tumbal/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'terpakai' }),
+        });
+      } catch (err) {
+        console.error('Gagal mengupdate status terpakai:', err);
+      }
+    } else {
+      setCopiedToast(`Raw QRIS ( ${qrisCode.substring(0, 18)}... ) tersalin!`);
+    }
 
     setTimeout(() => {
       setCopiedId(null);
@@ -129,6 +150,26 @@ export default function QrisTumbalView() {
     setTimeout(() => {
       setCopiedToast(null);
     }, 3000);
+  };
+
+  // Toggle status manual (Ready <-> Terpakai)
+  const handleToggleStatus = async (item: QrisTumbalItem) => {
+    const nextStatus: QrisTumbalStatus = item.status === 'aktif' ? 'terpakai' : 'aktif';
+
+    setItems((prevItems) =>
+      prevItems.map((i) => (i.id === item.id ? { ...i, status: nextStatus } : i))
+    );
+
+    try {
+      await fetch(`/api/qris-tumbal/${item.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+    } catch (err) {
+      console.error('Gagal mengubah status:', err);
+      fetchItems();
+    }
   };
 
   // Handle Delete Item
@@ -157,50 +198,29 @@ export default function QrisTumbalView() {
   const totalPages = Math.ceil(items.length / pageSize) || 1;
   const paginatedItems = items.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  const getProviderBadgeStyle = (pName: string) => {
-    switch (pName.toLowerCase()) {
-      case 'shopeepay':
-        return 'bg-orange-50 text-orange-700 border-orange-200';
-      case 'dana':
-        return 'bg-cyan-50 text-cyan-700 border-cyan-200';
-      case 'gopay':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'ovo':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
-      case 'bca':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'nobu bank':
-      case 'nobu':
-        return 'bg-rose-50 text-rose-700 border-rose-200';
-      default:
-        return 'bg-slate-50 text-slate-700 border-slate-200';
+  const getStatusBadge = (item: QrisTumbalItem) => {
+    if (item.status === 'aktif') {
+      return (
+        <button
+          onClick={() => handleToggleStatus(item)}
+          className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1 hover:bg-emerald-100 transition"
+          title="Klik untuk ubah menjadi Terpakai"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+          Ready
+        </button>
+      );
     }
-  };
-
-  const getStatusBadge = (st: QrisTumbalStatus) => {
-    switch (st) {
-      case 'aktif':
-        return (
-          <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            Aktif
-          </span>
-        );
-      case 'penuh':
-        return (
-          <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-amber-50 text-amber-700 border border-amber-200 inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            Penuh
-          </span>
-        );
-      case 'nonaktif':
-        return (
-          <span className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            Nonaktif
-          </span>
-        );
-    }
+    return (
+      <button
+        onClick={() => handleToggleStatus(item)}
+        className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1 hover:bg-rose-100 transition"
+        title="Klik untuk ubah kembali menjadi Ready"
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        Terpakai
+      </button>
+    );
   };
 
   return (
@@ -218,37 +238,31 @@ export default function QrisTumbalView() {
         </div>
       )}
 
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-4">
-          <div className="p-3 bg-shopee-50 text-shopee-500 rounded-xl">
-            <QrCode className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Raw QRIS</p>
-            <h3 className="text-2xl font-extrabold text-slate-900">{items.length} <span className="text-xs font-normal text-slate-500">QRIS</span></h3>
-          </div>
-        </div>
-
+      {/* Header Stats: 2 Cards (Raw QRIS Ready & Raw QRIS Terpakai) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Card 1: Raw QRIS Ready */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-4">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">QRIS Status Aktif</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Raw QRIS Ready</p>
             <h3 className="text-2xl font-extrabold text-emerald-600">
               {items.filter((i) => i.status === 'aktif').length} <span className="text-xs font-normal text-slate-500">Siap Pakai</span>
             </h3>
           </div>
         </div>
 
+        {/* Card 2: Raw QRIS Terpakai */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-4">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-            <Zap className="w-6 h-6" />
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Fitur Utama</p>
-            <p className="text-xs font-bold text-slate-700">1-Klik Salin Raw QRIS Code</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Raw QRIS Terpakai</p>
+            <h3 className="text-2xl font-extrabold text-rose-600">
+              {items.filter((i) => i.status === 'terpakai').length} <span className="text-xs font-normal text-slate-500">Sudah Dipakai</span>
+            </h3>
           </div>
         </div>
       </div>
@@ -377,26 +391,23 @@ export default function QrisTumbalView() {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider font-bold text-[10px] border-y border-slate-200">
               <tr>
-                <th className="px-4 py-3 text-center">No.</th>
+                <th className="px-4 py-3 text-center w-12">No.</th>
                 <th className="px-4 py-3">Kode Raw QRIS (Payload)</th>
-                <th className="px-4 py-3">Provider</th>
-                <th className="px-4 py-3">Nama QRIS / Label</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Catatan</th>
-                <th className="px-4 py-3 text-center">Aksi Cepat</th>
+                <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-3 text-center w-24">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
                     <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-shopee-500" />
                     <span>Memuat data Raw QRIS...</span>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-400">
                     <QrCode className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                     <p className="font-semibold text-slate-600">Belum ada Raw QRIS Tumbal.</p>
                     <p className="text-[11px]">Gunakan form di atas untuk memasukkan string QRIS pertama Anda.</p>
@@ -407,8 +418,8 @@ export default function QrisTumbalView() {
                   const itemIndex = (currentPage - 1) * pageSize + idx + 1;
                   const isCopied = copiedId === item.id;
                   const displayQris =
-                    item.raw_qris.length > 32
-                      ? `${item.raw_qris.substring(0, 16)}...${item.raw_qris.substring(item.raw_qris.length - 12)}`
+                    item.raw_qris.length > 40
+                      ? `${item.raw_qris.substring(0, 20)}...${item.raw_qris.substring(item.raw_qris.length - 16)}`
                       : item.raw_qris;
 
                   return (
@@ -418,10 +429,10 @@ export default function QrisTumbalView() {
                       </td>
 
                       {/* Kode Raw QRIS & Quick Copy */}
-                      <td className="px-4 py-3 max-w-sm">
+                      <td className="px-4 py-3">
                         <div className="flex items-center space-x-2">
                           <span
-                            className="font-mono text-[11px] text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 truncate max-w-[200px]"
+                            className="font-mono text-[11px] text-slate-900 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 truncate max-w-md"
                             title={item.raw_qris}
                           >
                             {displayQris}
@@ -429,12 +440,14 @@ export default function QrisTumbalView() {
 
                           <button
                             onClick={() => handleCopy(item.raw_qris, item.id)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shrink-0 ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shrink-0 ${
                               isCopied
                                 ? 'bg-emerald-500 text-white shadow-xs'
+                                : item.status === 'terpakai'
+                                ? 'bg-slate-100 text-slate-500 hover:bg-shopee-500 hover:text-white border border-slate-200'
                                 : 'bg-shopee-50 text-shopee-600 hover:bg-shopee-500 hover:text-white border border-shopee-200'
                             }`}
-                            title="Salin Raw QRIS String"
+                            title="Salin Raw QRIS & Otomatis Tandai Terpakai"
                           >
                             {isCopied ? (
                               <>
@@ -451,7 +464,7 @@ export default function QrisTumbalView() {
 
                           <button
                             onClick={() => setPreviewQrItem(item)}
-                            className="p-1 text-slate-400 hover:text-shopee-600 transition"
+                            className="p-1.5 text-slate-400 hover:text-shopee-600 transition"
                             title="Lihat Gambar QR Code"
                           >
                             <Eye className="w-4 h-4" />
@@ -459,49 +472,18 @@ export default function QrisTumbalView() {
                         </div>
                       </td>
 
-                      {/* Provider Badge */}
-                      <td className="px-4 py-3">
-                        <span
-                          className={`px-2.5 py-1 text-[11px] font-bold rounded-lg border ${getProviderBadgeStyle(
-                            item.provider
-                          )}`}
-                        >
-                          {item.provider}
-                        </span>
-                      </td>
+                      {/* Status (Clickable to toggle) */}
+                      <td className="px-4 py-3 text-center">{getStatusBadge(item)}</td>
 
-                      {/* Nama QRIS */}
-                      <td className="px-4 py-3 font-semibold text-slate-800">
-                        {item.nama_qris || <span className="text-slate-400 italic">-</span>}
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-4 py-3">{getStatusBadge(item.status)}</td>
-
-                      {/* Catatan */}
-                      <td className="px-4 py-3 text-slate-500 text-[11px] max-w-xs truncate">
-                        {item.catatan || <span className="text-slate-400 italic">-</span>}
-                      </td>
-
-                      {/* Aksi */}
+                      {/* Aksi Hapus */}
                       <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center space-x-1">
-                          <button
-                            onClick={() => setEditingItem(item)}
-                            className="p-1.5 text-slate-500 hover:text-shopee-600 hover:bg-shopee-50 rounded-lg transition"
-                            title="Edit QRIS"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
-                            title="Hapus QRIS"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                          title="Hapus QRIS"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -510,6 +492,7 @@ export default function QrisTumbalView() {
             </tbody>
           </table>
         </div>
+
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
