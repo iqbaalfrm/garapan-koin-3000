@@ -27,3 +27,17 @@ export const vaTumbal = pgTable('va_tumbal', {
 export type VATumbal = typeof vaTumbal.$inferSelect;
 export type NewVATumbal = typeof vaTumbal.$inferInsert;
 
+export const qrisTumbal = pgTable('qris_tumbal', {
+  id: serial('id').primaryKey(),
+  raw_qris: text('raw_qris').notNull(),
+  nama_qris: text('nama_qris'),
+  provider: text('provider').notNull().default('ShopeePay'),
+  catatan: text('catatan'),
+  status: text('status').$type<'aktif' | 'penuh' | 'nonaktif'>().notNull().default('aktif'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type QrisTumbal = typeof qrisTumbal.$inferSelect;
+export type NewQrisTumbal = typeof qrisTumbal.$inferInsert;
+
+

@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Coins, LayoutDashboard, PlusCircle, History, X, Sparkles, Wallet } from 'lucide-react';
+import { Coins, LayoutDashboard, PlusCircle, History, X, Sparkles, QrCode } from 'lucide-react';
 
-export type TabType = 'dashboard' | 'input' | 'riwayat' | 'va-tumbal';
+export type TabType = 'dashboard' | 'input' | 'riwayat' | 'qris-tumbal';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -35,11 +35,12 @@ export default function Sidebar({
       icon: History,
     },
     {
-      id: 'va-tumbal',
-      label: 'VA Tumbal',
-      icon: Wallet,
+      id: 'qris-tumbal',
+      label: 'Raw QRIS Tumbal',
+      icon: QrCode,
     },
   ] as const;
+
 
 
   return (

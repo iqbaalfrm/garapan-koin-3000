@@ -8,7 +8,7 @@ import EntryForm from '@/components/EntryForm';
 import FilterBar from '@/components/FilterBar';
 import EntryTable from '@/components/EntryTable';
 import EditModal from '@/components/EditModal';
-import VATumbalView from '@/components/VATumbalView';
+import QrisTumbalView from '@/components/QrisTumbalView';
 import { EntryItem, SummaryData, FilterParams } from '@/types';
 
 export default function Home() {
@@ -89,7 +89,7 @@ export default function Home() {
     dashboard: 'Dashboard Rekap & Ringkasan',
     input: 'Input Transaksi Baru',
     riwayat: 'Riwayat Transaksi Harian',
-    'va-tumbal': 'Manajemen Virtual Account (VA Tumbal)',
+    'qris-tumbal': 'Manajemen Raw QRIS Tumbal',
   };
 
   return (
@@ -184,9 +184,10 @@ export default function Home() {
             </div>
           )}
 
-          {/* Menu VA Tumbal */}
-          {activeTab === 'va-tumbal' && <VATumbalView />}
+          {/* Menu Raw QRIS Tumbal */}
+          {activeTab === 'qris-tumbal' && <QrisTumbalView />}
         </main>
+
 
 
         {/* Footer */}

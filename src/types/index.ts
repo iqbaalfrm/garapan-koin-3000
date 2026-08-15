@@ -57,3 +57,16 @@ export interface VATumbalItem {
   createdAt?: string;
 }
 
+export type QrisTumbalStatus = 'aktif' | 'penuh' | 'nonaktif';
+
+export interface QrisTumbalItem {
+  id: number;
+  raw_qris: string;
+  nama_qris?: string | null;
+  provider: string;
+  catatan?: string | null;
+  status: QrisTumbalStatus;
+  createdAt?: string;
+}
+
+
