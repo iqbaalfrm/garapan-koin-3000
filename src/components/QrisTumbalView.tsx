@@ -25,40 +25,37 @@ import {
 import { QrisTumbalItem, QrisTumbalStatus } from '@/types';
 import QrisTumbalEditModal from './QrisTumbalEditModal';
 
-// Helper parser untuk mengekstrak string Raw QRIS dari isi file/teks massal
+// Helper parser untuk mengekstrak SEMUA string Raw QRIS dari isi file/teks massal berapapun jumlahnya
 function parseBulkQrisText(text: string): string[] {
   if (!text || !text.trim()) return [];
 
   const results: string[] = [];
-  const lines = text.split(/\r?\n/);
+  let pos = 0;
 
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    const idx = line.indexOf('000201');
-    if (idx !== -1) {
-      const qrisCandidate = line.substring(idx).trim();
-      if (qrisCandidate.length >= 30) {
-        results.push(qrisCandidate);
-      }
+  while ((pos = text.indexOf('000201', pos)) !== -1) {
+    // Ambil teks dari posisi '000201' sampai akhir baris
+    let endPos = text.indexOf('\n', pos);
+    if (endPos === -1) endPos = text.length;
+
+    let candidate = text.substring(pos, endPos).replace(/\r$/, '').trim();
+
+    // Jika candidate terpotong atau ada delimiter keyword lain, bersihkan
+    const boundaryMatch = candidate.match(/^(000201[A-Za-z0-9\.\_\-\+\=\%\:\/\s]+?)(?=\s*(?:Item\s+\d+|Type\s*=|Data\s*=|RAW Data\s*=|$))/i);
+    if (boundaryMatch && boundaryMatch[1]) {
+      candidate = boundaryMatch[1].trim();
     }
+
+    if (candidate.length >= 25) {
+      results.push(candidate);
+    }
+
+    pos += 6; // Lanjut cari '000201' berikutnya di seluruh isi file
   }
 
-  // Fallback: Jika tidak dipisah per baris, cari via regex global 000201...
-  if (results.length === 0) {
-    const globalMatches = text.match(/000201[^\n\r]+/g);
-    if (globalMatches) {
-      for (const item of globalMatches) {
-        const cleaned = item.trim();
-        if (cleaned.length >= 30) {
-          results.push(cleaned);
-        }
-      }
-    }
-  }
-
-  // Deduplikasi string unik (menghilangkan duplikasi Data & RAW Data pada item yang sama)
+  // Deduplikasi string unik (menjaga semua QRIS unik tetap ada)
   return Array.from(new Set(results));
 }
+
 
 
 export default function QrisTumbalView() {
