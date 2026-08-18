@@ -13,15 +13,17 @@ interface EditModalProps {
 export default function EditModal({ entry, onClose, onSuccess }: EditModalProps) {
   const [tanggal, setTanggal] = useState<string>(entry.tanggal);
   const [noHp, setNoHp] = useState<string>(entry.no_hp);
-  const [jumlahBeaOtp, setJumlahBeaOtp] = useState<string>(String(entry.jumlah_bea_otp));
-  const [jumlahBeaRegis, setJumlahBeaRegis] = useState<string>(String(entry.jumlah_bea_regis));
-  const [jumlahOmset, setJumlahOmset] = useState<string>(String(entry.jumlah_omset));
+  const [jumlahBeaOtp, setJumlahBeaOtp] = useState<string>(String(entry.jumlah_bea_otp || 0));
+  const [jumlahBeaRegis, setJumlahBeaRegis] = useState<string>(String(entry.jumlah_bea_regis || 0));
+  const [jumlahBeaTopup, setJumlahBeaTopup] = useState<string>(String(entry.jumlah_bea_topup || 0));
+  const [jumlahOmset, setJumlahOmset] = useState<string>(String(entry.jumlah_omset || 0));
 
   const [saving, setSaving] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const parsedOtp = useMemo(() => Math.max(0, parseInt(jumlahBeaOtp, 10) || 0), [jumlahBeaOtp]);
   const parsedRegis = useMemo(() => Math.max(0, parseInt(jumlahBeaRegis, 10) || 0), [jumlahBeaRegis]);
+  const parsedTopup = useMemo(() => Math.max(0, parseInt(jumlahBeaTopup, 10) || 0), [jumlahBeaTopup]);
   const parsedOmset = useMemo(() => Math.max(0, parseInt(jumlahOmset, 10) || 0), [jumlahOmset]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +46,7 @@ export default function EditModal({ entry, onClose, onSuccess }: EditModalProps)
           no_hp: noHp.trim(),
           jumlah_bea_otp: parsedOtp,
           jumlah_bea_regis: parsedRegis,
+          jumlah_bea_topup: parsedTopup,
           jumlah_omset: parsedOmset,
         }),
       });
@@ -119,7 +122,7 @@ export default function EditModal({ entry, onClose, onSuccess }: EditModalProps)
           </div>
 
           {/* Row 2: Qty Inputs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="block text-[11px] text-slate-600 mb-1">Bea OTP (Qty)</label>
               <input
@@ -137,6 +140,16 @@ export default function EditModal({ entry, onClose, onSuccess }: EditModalProps)
                 min="0"
                 value={jumlahBeaRegis}
                 onChange={(e) => setJumlahBeaRegis(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-slate-600 mb-1">Bea Topup (Qty)</label>
+              <input
+                type="number"
+                min="0"
+                value={jumlahBeaTopup}
+                onChange={(e) => setJumlahBeaTopup(e.target.value)}
                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none"
               />
             </div>

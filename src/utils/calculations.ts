@@ -1,12 +1,14 @@
 export const RATES = {
   BEA_OTP: 915,
   BEA_REGIS: 500,
+  BEA_TOPUP: 500,
   OMSET: 3000,
 } as const;
 
 export interface CalculationResult {
   beaOtpRp: number;
   beaRegisRp: number;
+  beaTopupRp: number;
   omsetRp: number;
   bersihRp: number;
 }
@@ -17,16 +19,19 @@ export interface CalculationResult {
 export function calculateTransaction(
   jumlahBeaOtp: number,
   jumlahBeaRegis: number,
+  jumlahBeaTopup: number,
   jumlahOmset: number
 ): CalculationResult {
   const beaOtpRp = (jumlahBeaOtp || 0) * RATES.BEA_OTP;
   const beaRegisRp = (jumlahBeaRegis || 0) * RATES.BEA_REGIS;
+  const beaTopupRp = (jumlahBeaTopup || 0) * RATES.BEA_TOPUP;
   const omsetRp = (jumlahOmset || 0) * RATES.OMSET;
-  const bersihRp = omsetRp - beaOtpRp - beaRegisRp;
+  const bersihRp = omsetRp - beaOtpRp - beaRegisRp - beaTopupRp;
 
   return {
     beaOtpRp,
     beaRegisRp,
+    beaTopupRp,
     omsetRp,
     bersihRp,
   };

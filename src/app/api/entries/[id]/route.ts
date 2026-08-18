@@ -10,6 +10,7 @@ function formatEntryWithCalculations(entry: any) {
   const calc = calculateTransaction(
     entry.jumlah_bea_otp,
     entry.jumlah_bea_regis,
+    entry.jumlah_bea_topup,
     entry.jumlah_omset
   );
 
@@ -17,6 +18,7 @@ function formatEntryWithCalculations(entry: any) {
     ...entry,
     bea_otp_rp: calc.beaOtpRp,
     bea_regis_rp: calc.beaRegisRp,
+    bea_topup_rp: calc.beaTopupRp,
     omset_rp: calc.omsetRp,
     bersih_rp: calc.bersihRp,
   };
@@ -41,6 +43,7 @@ export async function PUT(
       no_hp,
       jumlah_bea_otp,
       jumlah_bea_regis,
+      jumlah_bea_topup,
       jumlah_omset,
     } = body;
 
@@ -53,6 +56,7 @@ export async function PUT(
 
     const qtyOtp = Math.max(0, parseInt(jumlah_bea_otp, 10) || 0);
     const qtyRegis = Math.max(0, parseInt(jumlah_bea_regis, 10) || 0);
+    const qtyTopup = Math.max(0, parseInt(jumlah_bea_topup, 10) || 0);
     const qtyOmset = Math.max(0, parseInt(jumlah_omset, 10) || 0);
 
     const updated = await db
@@ -62,6 +66,7 @@ export async function PUT(
         no_hp: String(no_hp).trim(),
         jumlah_bea_otp: qtyOtp,
         jumlah_bea_regis: qtyRegis,
+        jumlah_bea_topup: qtyTopup,
         jumlah_omset: qtyOmset,
       })
       .where(eq(entries.id, entryId))

@@ -13,6 +13,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
   const [noHp, setNoHp] = useState<string>('');
   const [jumlahBeaOtp, setJumlahBeaOtp] = useState<string>('');
   const [jumlahBeaRegis, setJumlahBeaRegis] = useState<string>('');
+  const [jumlahBeaTopup, setJumlahBeaTopup] = useState<string>('');
   const [jumlahOmset, setJumlahOmset] = useState<string>('');
 
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -21,6 +22,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
 
   const parsedOtp = useMemo(() => Math.max(0, parseInt(jumlahBeaOtp, 10) || 0), [jumlahBeaOtp]);
   const parsedRegis = useMemo(() => Math.max(0, parseInt(jumlahBeaRegis, 10) || 0), [jumlahBeaRegis]);
+  const parsedTopup = useMemo(() => Math.max(0, parseInt(jumlahBeaTopup, 10) || 0), [jumlahBeaTopup]);
   const parsedOmset = useMemo(() => Math.max(0, parseInt(jumlahOmset, 10) || 0), [jumlahOmset]);
 
   const handleReset = () => {
@@ -28,6 +30,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
     setNoHp('');
     setJumlahBeaOtp('');
     setJumlahBeaRegis('');
+    setJumlahBeaTopup('');
     setJumlahOmset('');
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -54,6 +57,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
           no_hp: noHp.trim(),
           jumlah_bea_otp: parsedOtp,
           jumlah_bea_regis: parsedRegis,
+          jumlah_bea_topup: parsedTopup,
           jumlah_omset: parsedOmset,
         }),
       });
@@ -68,6 +72,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
       setNoHp('');
       setJumlahBeaOtp('');
       setJumlahBeaRegis('');
+      setJumlahBeaTopup('');
       setJumlahOmset('');
 
       onSuccess();
@@ -150,7 +155,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
         </div>
 
         {/* Row 2: Inputs Qty Transaksi */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
           {/* Jumlah Bea OTP */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-600 mb-1">
@@ -182,6 +187,26 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
                 min="0"
                 value={jumlahBeaRegis}
                 onChange={(e) => setJumlahBeaRegis(e.target.value)}
+                placeholder="0"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-shopee-500 transition"
+              />
+              <span className="absolute right-3 top-2 text-[10px] text-slate-400 font-mono">
+                × 500
+              </span>
+            </div>
+          </div>
+
+          {/* Jumlah Bea Topup ShopeePay */}
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+              Bea Topup ShopeePay (Qty)
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                value={jumlahBeaTopup}
+                onChange={(e) => setJumlahBeaTopup(e.target.value)}
                 placeholder="0"
                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-shopee-500 transition"
               />

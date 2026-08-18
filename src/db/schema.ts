@@ -7,6 +7,7 @@ export const entries = pgTable('entries', {
   no_hp: text('no_hp').notNull(),
   jumlah_bea_otp: integer('jumlah_bea_otp').notNull().default(0),
   jumlah_bea_regis: integer('jumlah_bea_regis').notNull().default(0),
+  jumlah_bea_topup: integer('jumlah_bea_topup').notNull().default(0),
   jumlah_omset: integer('jumlah_omset').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

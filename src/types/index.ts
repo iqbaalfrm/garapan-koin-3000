@@ -7,12 +7,14 @@ export interface EntryItem {
   no_hp: string;
   jumlah_bea_otp: number;
   jumlah_bea_regis: number;
+  jumlah_bea_topup: number;
   jumlah_omset: number;
   createdAt?: string;
   
   // Computed values (calculated on the fly)
   bea_otp_rp: number;
   bea_regis_rp: number;
+  bea_topup_rp: number;
   omset_rp: number;
   bersih_rp: number;
 }
@@ -21,11 +23,13 @@ export interface SummaryData {
   tanggalTarget: string;
   totalBeaOtpHariIni: number;
   totalBeaRegisHariIni: number;
+  totalBeaTopupHariIni: number;
   totalOmsetHariIni: number;
   totalBersihHariIni: number;
   
   totalQtyOtpHariIni: number;
   totalQtyRegisHariIni: number;
+  totalQtyTopupHariIni: number;
   totalQtyOmsetHariIni: number;
 
   totalBersihPagi: number;

@@ -125,6 +125,7 @@ export default function EntryTable({
                 <th className="px-4 py-3">No HP</th>
                 <th className="px-4 py-3 text-right">Bea OTP (Rp)</th>
                 <th className="px-4 py-3 text-right">Bea Regis (Rp)</th>
+                <th className="px-4 py-3 text-right">Bea Topup (Rp)</th>
                 <th className="px-4 py-3 text-right">Omset (Rp)</th>
                 <th className="px-4 py-3 text-right text-shopee-600">Bersih (Rp)</th>
                 <th className="px-4 py-3 text-center">Aksi</th>
@@ -151,6 +152,10 @@ export default function EntryTable({
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
                       <span className="text-slate-400 text-[10px] block">({item.jumlah_bea_regis} × 500)</span>
                       <span className="font-bold text-rose-600">{formatRupiah(item.bea_regis_rp)}</span>
+                    </td>
+                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      <span className="text-slate-400 text-[10px] block">({item.jumlah_bea_topup || 0} × 500)</span>
+                      <span className="font-bold text-amber-600">{formatRupiah(item.bea_topup_rp || 0)}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
                       <span className="text-slate-400 text-[10px] block">({item.jumlah_omset} × 3k)</span>
@@ -273,7 +278,7 @@ export default function EntryTable({
                 <span className="font-mono font-bold text-slate-900">{item.no_hp}</span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-[11px]">
                 <div>
                   <span className="text-[10px] text-slate-500 block">OTP ({item.jumlah_bea_otp})</span>
                   <span className="font-bold text-red-600">{formatRupiah(item.bea_otp_rp)}</span>
@@ -281,6 +286,10 @@ export default function EntryTable({
                 <div>
                   <span className="text-[10px] text-slate-500 block">Regis ({item.jumlah_bea_regis})</span>
                   <span className="font-bold text-rose-600">{formatRupiah(item.bea_regis_rp)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 block">Topup ({item.jumlah_bea_topup || 0})</span>
+                  <span className="font-bold text-amber-600">{formatRupiah(item.bea_topup_rp || 0)}</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-slate-500 block">Omset ({item.jumlah_omset})</span>
