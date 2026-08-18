@@ -88,7 +88,7 @@ export default function SummaryCards({ summary, loading }: SummaryCardsProps) {
               <span>Bea Topup ShopeePay</span>
             </span>
             <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-mono">
-              × Rp 500
+              × Rp 100
             </span>
           </div>
           <div className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-slate-900 tracking-tight">

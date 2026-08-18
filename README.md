@@ -10,7 +10,7 @@ Semua angka Rupiah dihitung secara langsung (*on-the-fly*) dari kuantitas transa
 
 1. **Bea OTP (Rp)** = `Jumlah Bea OTP` × **Rp 915**
 2. **Bea Regis (Rp)** = `Jumlah Bea Regis` × **Rp 500**
-3. **Bea Topup ShopeePay (Rp)** = `Jumlah Bea Topup` × **Rp 500**
+3. **Bea Topup ShopeePay (Rp)** = `Jumlah Bea Topup` × **Rp 100**
 4. **Omset (Rp)** = `Jumlah Omset` × **Rp 3.000**
 5. **Bersih (Rp)** = `Omset (Rp)` − `Bea OTP (Rp)` − `Bea Regis (Rp)` − `Bea Topup (Rp)`
 

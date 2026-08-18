@@ -154,7 +154,7 @@ export default function EntryTable({
                       <span className="font-bold text-rose-600">{formatRupiah(item.bea_regis_rp)}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">
-                      <span className="text-slate-400 text-[10px] block">({item.jumlah_bea_topup || 0} × 500)</span>
+                      <span className="text-slate-400 text-[10px] block">({item.jumlah_bea_topup || 0} × 100)</span>
                       <span className="font-bold text-amber-600">{formatRupiah(item.bea_topup_rp || 0)}</span>
                     </td>
                     <td className="px-4 py-3.5 text-right whitespace-nowrap">

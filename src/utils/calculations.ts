@@ -1,7 +1,7 @@
 export const RATES = {
   BEA_OTP: 915,
   BEA_REGIS: 500,
-  BEA_TOPUP: 500,
+  BEA_TOPUP: 100,
   OMSET: 3000,
 } as const;
 

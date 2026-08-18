@@ -211,7 +211,7 @@ export default function EntryForm({ onSuccess }: EntryFormProps) {
                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-shopee-500 transition"
               />
               <span className="absolute right-3 top-2 text-[10px] text-slate-400 font-mono">
-                × 500
+                × 100
               </span>
             </div>
           </div>
